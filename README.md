@@ -1,4 +1,4 @@
-# 🛡️ Implementación Integral de VPNs en Cisco (9 Escenarios)
+<img width="1200" height="564" alt="image" src="https://github.com/user-attachments/assets/727ffbcd-2c87-49d7-b9c1-3d79084acb53" /># 🛡️ Implementación Integral de VPNs en Cisco (9 Escenarios)
 
 Este repositorio contiene la documentación técnica, topologías y scripts de configuración para la implementación de 9 variantes de Redes Privadas Virtuales (VPN). El proyecto abarca desde tecnologías legacy hasta arquitecturas modernas de alta escalabilidad, utilizando como identificador de seguridad la **matrícula 0331**.
 
@@ -22,6 +22,8 @@ Este repositorio contiene la documentación técnica, topologías y scripts de c
 9. [Acceso Remoto L2TP/IPsec](#escenario-9)
 
 ---
+## Topologia utilizada en Laboratorios 1,2,3,4,5, & 6
+<img width="1156" height="530" alt="image" src="https://github.com/user-attachments/assets/5c1008de-57e4-49f6-b2de-eba4645b4b2a" />
 
 <a name="escenario-1"></a>
 ## 1. Site-to-Site Basada en Políticas (IKEv1)
@@ -278,6 +280,9 @@ router eigrp 1
  network 192.168.10.0 0.0.0.3
  network 10.3.31.0 0.0.0.255
 ```
+## Topologia utilizada en Laboratorios 7 y 8
+
+<img width="1200" height="564" alt="image" src="https://github.com/user-attachments/assets/4dd2c7c5-c1fa-4799-9582-9e469dc788df" />
 
 <a name="escenario-7"></a>
 ## 7. DMVPN Fase 2 (Multipunto)
@@ -369,6 +374,10 @@ router eigrp 1
  network 10.3.31.0 0.0.0.255
  no ip split-horizon eigrp 1
 ```
+
+## Topologia utilzada
+
+<img width="749" height="320" alt="image" src="https://github.com/user-attachments/assets/81d39af6-1b7b-43cf-b2c5-a33e0124abb9" />
 
 <a name="escenario-9"></a>
 ## 9. Acceso Remoto L2TP/IPsec (Client-to-Site)
