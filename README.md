@@ -368,7 +368,7 @@ router eigrp 1
  network 10.0.0.0 0.0.0.255
  network 10.3.31.0 0.0.0.255
  no ip split-horizon eigrp 1
----
+```
 
 <a name="escenario-9"></a>
 ## 9. Acceso Remoto L2TP/IPsec (Client-to-Site)
