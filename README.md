@@ -26,6 +26,7 @@ Este repositorio contiene la documentación técnica, topologías y scripts de c
 <a name="escenario-1"></a>
 ## 1. Site-to-Site Basada en Políticas (IKEv1)
 Establece una conexión segura entre R1 y R2 inspeccionando el tráfico mediante una ACL.
+```
 conf t
 hostname R1-POL-IKEv2
 access-list 100 permit ip 10.3.31.0 0.0.0.255 172.3.31.0 0.0.0.255
@@ -63,16 +64,15 @@ interface GigabitEthernet0/0
  crypto map CMAP-POL
 no shut
 ip route 0.0.0.0 0.0.0.0 20.23.3.2
+```
 
- 
 * **Método:** Policy-Based (Crypto Maps).
 * **Verificación:** `show crypto isakmp sa` debe mostrar `QM_IDLE`.
-
-[Image of Site-to-Site Policy-Based VPN architecture]
 
 <a name="escenario-2"></a>
 ## 2. Site-to-Site Basada en Políticas (IKEv2)
 Evolución hacia el framework IKEv2 para mayor eficiencia.
+```
 conf t
 hostname R1-POL-IKEv2
 access-list 100 permit ip 10.3.31.0 0.0.0.255 172.3.31.0 0.0.0.255
@@ -110,6 +110,7 @@ interface GigabitEthernet0/0
  crypto map CMAP-POL
 no shut
 ip route 0.0.0.0 0.0.0.0 20.23.3.2
+```
 * **Clave:** Requiere `ikev2-profile` y `keyring`.
 * **Verificación:** `show crypto ikev2 sa` en estado `READY`.
 
@@ -118,6 +119,7 @@ ip route 0.0.0.0 0.0.0.0 20.23.3.2
 Uso de interfaces virtuales (`Tunnel1`) eliminando el overhead de GRE.
 * **Modo:** `tunnel mode ipsec ipv4`.
 * **Beneficio:** Permite enrutamiento directo hacia la interfaz de túnel.
+```bash
 conf t
 hostname R1-VTI-IKEv1
 crypto isakmp policy 10
@@ -141,18 +143,68 @@ interface Tunnel1
  tunnel protection ipsec profile IPSEC-PROF-V1
 exit
 ip route 172.3.31.0 255.255.255.0 Tunnel1
+```
 
 <a name="escenario-4"></a>
 ## 4. Site-to-Site VTI (IKEv2)
 VTI con seguridad superior.
 * **Parámetros:** AES-256-CBC / SHA-256.
 * **Ruta:** La red remota se alcanza vía `Tunnel1` en la tabla de ruteo.
+```
+conf t
+hostname R1-VTI-IKEv2
+!
+crypto ikev2 proposal PROP-VTI
+ encryption aes-cbc-256
+ integrity sha256
+ prf sha256
+ group 5
+exit
+crypto ikev2 policy POL-VTI
+ proposal PROP-VTI
+exit
+crypto ikev2 keyring KEY-VTI
+ peer R2
+  address 20.23.3.5
+  pre-shared-key 0331
+exit
+crypto ikev2 profile PROF-VTI
+ match identity remote address 20.23.3.5 255.255.255.255
+ authentication remote pre-share
+ authentication local pre-share
+ keyring local KEY-VTI
+exit
+crypto ipsec transform-set TS-VTI esp-aes 256 esp-sha256-hmac
+ mode tunnel
+exit
+crypto ipsec profile IPSEC-VTI-PROF
+ set transform-set TS-VTI
+ set ikev2-profile PROF-VTI
+exit
+!
+interface Tunnel1
+ ip address 10.1.1.1 255.255.255.252
+ tunnel source GigabitEthernet0/0
+ tunnel destination 20.23.3.5
+ tunnel mode ipsec ipv4
+ tunnel protection ipsec profile IPSEC-VTI-PROF
+exit
+interface GigabitEthernet0/0
+ ip address 20.23.3.1 255.255.255.252
+ no shut
+interface GigabitEthernet0/1
+ ip address 10.3.31.1 255.255.255.0
+ no shut
+ip route 0.0.0.0 0.0.0.0 20.23.3.2
+ip route 172.3.31.0 255.255.255.0 Tunnel1
+```
 
 <a name="escenario-5"></a>
 ## 5. Túnel GRE sobre IPsec (IKEv1)
 Permite transportar protocolos de enrutamiento dinámico como **EIGRP AS 1**.
 * **Modo:** IPsec en `mode transport`.
 * **Verificación:** `show ip eigrp neighbors` sobre `Tunnel0`.
+```
 conf t
 hostname R1-GRE-IPSEC
 crypto isakmp policy 10
@@ -177,38 +229,101 @@ exit
 router eigrp 1
  network 192.168.10.0 0.0.0.3
  network 10.3.31.0 0.0.0.255
+```
+
+
 <a name="escenario-6"></a>
 ## 6. Túnel GRE sobre IPsec (IKEv2)
 Migración de GRE a IKEv2 para mejor manejo de llaves.
 * **Check:** El `sa-type` debe ser `transport` para optimizar la cabecera IP.
+```
 conf t
+hostname R1-GRE-IKEv2
+!
+crypto ikev2 proposal PROP-GRE
+ encryption aes-cbc-256
+ integrity sha256
+ prf sha256
+ group 5
+exit
+crypto ikev2 policy POL-GRE
+ proposal PROP-GRE
+exit
+crypto ikev2 keyring KEYS-GRE
+ peer R2
+  address 20.23.3.5
+  pre-shared-key 0331
+exit
+crypto ikev2 profile PROF-GRE-IKEv2
+ match identity remote address 20.23.3.5 255.255.255.255
+ authentication remote pre-share
+ authentication local pre-share
+ keyring local KEYS-GRE
+exit
+crypto ipsec transform-set TS-GRE-V2 esp-aes 256 esp-sha256-hmac
+ mode transport
+exit
 crypto ipsec profile IPSEC-PROF-V2
  set transform-set TS-GRE-V2
  set ikev2-profile PROF-GRE-IKEv2
+exit
+!
 interface Tunnel0
+ ip address 192.168.10.1 255.255.255.252
+ tunnel source GigabitEthernet0/0
+ tunnel destination 20.23.3.5
  tunnel protection ipsec profile IPSEC-PROF-V2
-
+exit
+router eigrp 1
+ network 192.168.10.0 0.0.0.3
+ network 10.3.31.0 0.0.0.255
+```
 
 <a name="escenario-7"></a>
 ## 7. DMVPN Fase 2 (Multipunto)
 Arquitectura Hub-and-Spoke con túneles directos Spoke-to-Spoke.
 * **NHRP:** Los Spokes resuelven direcciones vía el Hub.
 * **EIGRP:** Requiere `no ip next-hop-self` en el Hub.
+```
 conf t
+hostname HUB-R1-F2
+!
+crypto isakmp policy 10
+ encr aes 256
+ hash sha256
+ authentication pre-share
+ group 5
+exit
+crypto isakmp key 0331 address 0.0.0.0
+crypto ipsec transform-set TS_DMVPN esp-aes 256 esp-sha256-hmac
+ mode transport
+exit
+crypto ipsec profile PROF-DMVPN
+ set transform-set TS_DMVPN
+exit
+!
 interface Tunnel0
  ip address 10.0.0.1 255.255.255.0
+ no ip redirects
+ ip nhrp authentication 0331
  ip nhrp map multicast dynamic
  ip nhrp network-id 1
- tunnel source Gi0/0
+ tunnel source GigabitEthernet0/0
  tunnel mode gre multipoint
+ tunnel protection ipsec profile PROF-DMVPN
+exit
 router eigrp 1
+ network 10.0.0.0 0.0.0.255
+ network 10.3.31.0 0.0.0.255
  no ip split-horizon eigrp 1
  no ip next-hop-self eigrp 1
+```
 
 <a name="escenario-8"></a>
 ## 8. DMVPN Fase 3 con IKEv2
 Optimización con `NHRP Redirect` y `NHRP Shortcut`.
 * **Resultado:** Los Spokes crean atajos dinámicos (Rutas `H` en `show ip route`).
+```
 conf t
 hostname HUB-R1
 crypto ikev2 proposal PROP-0331
