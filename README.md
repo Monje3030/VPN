@@ -288,7 +288,7 @@ router eigrp 1
 Arquitectura Hub-and-Spoke con túneles directos Spoke-to-Spoke.
 * **NHRP:** Los Spokes resuelven direcciones vía el Hub.
 * **EIGRP:** Requiere `no ip next-hop-self` en el Hub.
-```
+``` HUB R1
 conf t
 hostname HUB-R1-F2
 !
@@ -322,12 +322,85 @@ router eigrp 1
  no ip split-horizon eigrp 1
  no ip next-hop-self eigrp 1
 ```
-
+``` Spoke R2
+conf t
+hostname SPOKE-R2-F2
+!
+crypto isakmp policy 10
+ encr aes 256
+ hash sha256
+ authentication pre-share
+ group 5
+exit
+crypto isakmp key 0331 address 20.23.3.1
+!
+crypto ipsec transform-set TS_DMVPN esp-aes 256 esp-sha256-hmac
+ mode transport
+exit
+crypto ipsec profile PROF-DMVPN
+ set transform-set TS_DMVPN
+exit
+!
+interface Tunnel0
+ ip address 10.0.0.2 255.255.255.0
+ no ip redirects
+ ip nhrp authentication 0331
+ ip nhrp map 10.0.0.1 20.23.3.1
+ ip nhrp map multicast 20.23.3.1
+ ip nhrp nhs 10.0.0.1
+ ip nhrp network-id 1
+ tunnel source Gi0/0
+ tunnel mode gre multipoint
+ tunnel protection ipsec profile PROF-DMVPN
+exit
+!
+router eigrp 1
+ network 10.0.0.0 0.0.0.255
+ network 172.3.31.0 0.0.0.255
+exit
+```
+``` Spoke R3
+conf t
+hostname SPOKE-R3-F2
+!
+crypto isakmp policy 10
+ encr aes 256
+ hash sha256
+ authentication pre-share
+ group 5
+exit
+crypto isakmp key 0331 address 20.23.3.1
+!
+crypto ipsec transform-set TS_DMVPN esp-aes 256 esp-sha256-hmac
+ mode transport
+exit
+crypto ipsec profile PROF-DMVPN
+ set transform-set TS_DMVPN
+exit
+!
+interface Tunnel0
+ ip address 10.0.0.3 255.255.255.0
+ no ip redirects
+ ip nhrp authentication 0331
+ ip nhrp map 10.0.0.1 20.23.3.1
+ ip nhrp map multicast 20.23.3.1
+ ip nhrp nhs 10.0.0.1
+ ip nhrp network-id 1
+ tunnel source Gi0/0
+ tunnel mode gre multipoint
+ tunnel protection ipsec profile PROF-DMVPN
+exit
+!
+router eigrp 1
+ network 10.0.0.0 0.0.0.255
+ network 192.168.31.0 0.0.0.255
+exit
+```
 <a name="escenario-8"></a>
 ## 8. DMVPN Fase 3 con IKEv2 (Router HUB)
 Optimización con `NHRP Redirect` y `NHRP Shortcut`.
 * **Resultado:** Los Spokes crean atajos dinámicos (Rutas `H` en `show ip route`).
-```
+```HUB R1 F3
 conf t
 hostname HUB-R1
 crypto ikev2 proposal PROP-0331
@@ -374,6 +447,111 @@ router eigrp 1
  no ip split-horizon eigrp 1
 ```
 
+```Spoke R2 Fase 3
+conf t
+hostname SPOKE-R2-F3
+!
+crypto ikev2 proposal PROP-0331
+ encryption aes-cbc-256
+ integrity sha256
+ prf sha256
+ group 5
+exit
+crypto ikev2 policy POL-0331
+ proposal PROP-0331
+exit
+crypto ikev2 keyring KEYS-DMVPN
+ peer HUB
+  address 20.23.3.1
+  pre-shared-key 0331
+exit
+crypto ikev2 profile PROF-DMVPN
+ match identity remote address 20.23.3.1 255.255.255.255
+ authentication remote pre-share
+ authentication local pre-share
+ keyring local KEYS-DMVPN
+exit
+!
+crypto ipsec transform-set TS-F3 esp-aes 256 esp-sha256-hmac
+ mode transport
+exit
+crypto ipsec profile PROF-F3
+ set transform-set TS-F3
+ set ikev2-profile PROF-DMVPN
+exit
+!
+interface Tunnel0
+ ip address 10.0.0.2 255.255.255.0
+ no ip redirects
+ ip nhrp authentication 0331
+ ip nhrp map 10.0.0.1 20.23.3.1
+ ip nhrp map multicast 20.23.3.1
+ ip nhrp nhs 10.0.0.1
+ ip nhrp network-id 1
+ ip nhrp shortcut
+ tunnel source Gi0/0
+ tunnel mode gre multipoint
+ tunnel protection ipsec profile PROF-F3
+exit
+!
+router eigrp 1
+ network 10.0.0.0 0.0.0.255
+ network 172.3.31.0 0.0.0.255
+exit
+```
+
+``` Spoke R3 Fase 3
+conf t
+hostname SPOKE-R3-F3
+!
+crypto ikev2 proposal PROP-0331
+ encryption aes-cbc-256
+ integrity sha256
+ prf sha256
+ group 5
+exit
+crypto ikev2 policy POL-0331
+ proposal PROP-0331
+exit
+crypto ikev2 keyring KEYS-DMVPN
+ peer HUB
+  address 20.23.3.1
+  pre-shared-key 0331
+exit
+crypto ikev2 profile PROF-DMVPN
+ match identity remote address 20.23.3.1 255.255.255.255
+ authentication remote pre-share
+ authentication local pre-share
+ keyring local KEYS-DMVPN
+exit
+!
+crypto ipsec transform-set TS-F3 esp-aes 256 esp-sha256-hmac
+ mode transport
+exit
+crypto ipsec profile PROF-F3
+ set transform-set TS-F3
+ set ikev2-profile PROF-DMVPN
+exit
+!
+interface Tunnel0
+ ip address 10.0.0.3 255.255.255.0
+ no ip redirects
+ ip nhrp authentication 0331
+ ip nhrp map 10.0.0.1 20.23.3.1
+ ip nhrp map multicast 20.23.3.1
+ ip nhrp nhs 10.0.0.1
+ ip nhrp network-id 1
+ ip nhrp shortcut
+ tunnel source Gi0/0
+ tunnel mode gre multipoint
+ tunnel protection ipsec profile PROF-F3
+exit
+!
+router eigrp 1
+ network 10.0.0.0 0.0.0.255
+ network 192.168.31.0 0.0.0.255
+exit
+```
 ## Topologia utilzada
 
 <img width="749" height="320" alt="image" src="https://github.com/user-attachments/assets/81d39af6-1b7b-43cf-b2c5-a33e0124abb9" />
