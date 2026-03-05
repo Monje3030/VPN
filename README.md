@@ -324,7 +324,7 @@ router eigrp 1
 ```
 
 <a name="escenario-8"></a>
-## 8. DMVPN Fase 3 con IKEv2
+## 8. DMVPN Fase 3 con IKEv2 (Router HUB)
 Optimización con `NHRP Redirect` y `NHRP Shortcut`.
 * **Resultado:** Los Spokes crean atajos dinámicos (Rutas `H` en `show ip route`).
 ```
@@ -379,7 +379,7 @@ router eigrp 1
 <img width="749" height="320" alt="image" src="https://github.com/user-attachments/assets/81d39af6-1b7b-43cf-b2c5-a33e0124abb9" />
 
 <a name="escenario-9"></a>
-## 9. Acceso Remoto L2TP/IPsec (Client-to-Site)
+## 9. Acceso Remoto L2TP/IPsec (Client-to-Site) (Router HUB)
 Implementación de servidor VPN para clientes Windows Server 2012 R2.
 
 ### Configuración del Servidor (HUB-L2TP)
