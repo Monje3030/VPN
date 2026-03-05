@@ -1,4 +1,3 @@
-<img width="1200" height="564" alt="image" src="https://github.com/user-attachments/assets/727ffbcd-2c87-49d7-b9c1-3d79084acb53" /># 🛡️ Implementación Integral de VPNs en Cisco (9 Escenarios)
 
 Este repositorio contiene la documentación técnica, topologías y scripts de configuración para la implementación de 9 variantes de Redes Privadas Virtuales (VPN). El proyecto abarca desde tecnologías legacy hasta arquitecturas modernas de alta escalabilidad, utilizando como identificador de seguridad la **matrícula 0331**.
 
