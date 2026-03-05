@@ -25,7 +25,7 @@ Este repositorio contiene la documentación técnica, topologías y scripts de c
 <img width="1156" height="530" alt="image" src="https://github.com/user-attachments/assets/5c1008de-57e4-49f6-b2de-eba4645b4b2a" />
 
 <a name="escenario-1"></a>
-## 1. Site-to-Site Basada en Políticas (IKEv1)
+## 1. Site-to-Site Basada en Políticas (IKEv1) (Router 1 y Router 2)
 Establece una conexión segura entre R1 y R2 inspeccionando el tráfico mediante una ACL.
 ```
 conf t
@@ -71,7 +71,7 @@ ip route 0.0.0.0 0.0.0.0 20.23.3.2
 * **Verificación:** `show crypto isakmp sa` debe mostrar `QM_IDLE`.
 
 <a name="escenario-2"></a>
-## 2. Site-to-Site Basada en Políticas (IKEv2)
+## 2. Site-to-Site Basada en Políticas (IKEv2) (Router 1 & Router 2)
 Evolución hacia el framework IKEv2 para mayor eficiencia.
 ```
 conf t
@@ -116,7 +116,7 @@ ip route 0.0.0.0 0.0.0.0 20.23.3.2
 * **Verificación:** `show crypto ikev2 sa` en estado `READY`.
 
 <a name="escenario-3"></a>
-## 3. Site-to-Site VTI (IKEv1)
+## 3. Site-to-Site VTI (IKEv1) (Router 1 & Router 2)
 Uso de interfaces virtuales (`Tunnel1`) eliminando el overhead de GRE.
 * **Modo:** `tunnel mode ipsec ipv4`.
 * **Beneficio:** Permite enrutamiento directo hacia la interfaz de túnel.
@@ -147,7 +147,7 @@ ip route 172.3.31.0 255.255.255.0 Tunnel1
 ```
 
 <a name="escenario-4"></a>
-## 4. Site-to-Site VTI (IKEv2)
+## 4. Site-to-Site VTI (IKEv2) (Router 1 & Router 2)
 VTI con seguridad superior.
 * **Parámetros:** AES-256-CBC / SHA-256.
 * **Ruta:** La red remota se alcanza vía `Tunnel1` en la tabla de ruteo.
@@ -201,7 +201,7 @@ ip route 172.3.31.0 255.255.255.0 Tunnel1
 ```
 
 <a name="escenario-5"></a>
-## 5. Túnel GRE sobre IPsec (IKEv1)
+## 5. Túnel GRE sobre IPsec (IKEv1) (Router 1 & Router 2)
 Permite transportar protocolos de enrutamiento dinámico como **EIGRP AS 1**.
 * **Modo:** IPsec en `mode transport`.
 * **Verificación:** `show ip eigrp neighbors` sobre `Tunnel0`.
@@ -234,7 +234,7 @@ router eigrp 1
 
 
 <a name="escenario-6"></a>
-## 6. Túnel GRE sobre IPsec (IKEv2)
+## 6. Túnel GRE sobre IPsec (IKEv2) (Router 1 & Router 2)
 Migración de GRE a IKEv2 para mejor manejo de llaves.
 * **Check:** El `sa-type` debe ser `transport` para optimizar la cabecera IP.
 ```
@@ -284,7 +284,7 @@ router eigrp 1
 <img width="1200" height="564" alt="image" src="https://github.com/user-attachments/assets/4dd2c7c5-c1fa-4799-9582-9e469dc788df" />
 
 <a name="escenario-7"></a>
-## 7. DMVPN Fase 2 (Multipunto)
+## 7. DMVPN Fase 2 (Multipunto) (Router HUB)
 Arquitectura Hub-and-Spoke con túneles directos Spoke-to-Spoke.
 * **NHRP:** Los Spokes resuelven direcciones vía el Hub.
 * **EIGRP:** Requiere `no ip next-hop-self` en el Hub.
