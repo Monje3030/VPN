@@ -375,7 +375,7 @@ router eigrp 1
 Implementación de servidor VPN para clientes Windows Server 2012 R2.
 
 ### Configuración del Servidor (HUB-L2TP)
-```bash
+```
 conf t
 hostname HUB-L2TP
 ip local pool L2TP-POOL 10.3.31.50 10.3.31.60
@@ -418,3 +418,6 @@ interface Virtual-Template1
 exit
 username admin password admin0331
 ip route 0.0.0.0 0.0.0.0 20.23.3.2
+```
+## 10. Enlace a Video demostrativo
+https://youtu.be/nKbeAdw5-mw
